@@ -2,6 +2,7 @@ from math import sqrt
 
 alias PI = 3.141592653589793
 
+
 @value
 struct BaseValues:
     """
@@ -25,6 +26,31 @@ struct BaseValues:
     n_p : int
         Number of pole pairs.
 
+    """
+
+    var U_nom: Float32
+    var I_nom: Float32
+    var f_nom: Float32
+    var P_nom: Float32
+    var tau_nom: Float32
+    var n_p: Int
+
+    fn calculateAttributeValues(self) -> Attributes:
+        var u = sqrt(2 / 3) * self.U_nom
+        var i = sqrt(2) * self.I_nom
+        var w = 2 * PI * self.f_nom
+        var psi = u / w
+        var p = 1.5 * u * i
+        var Z = u / i
+        var L = Z / w
+        var tau = self.n_p * p / w
+
+        return Attributes(u, i, w, psi, p, Z, L, tau)
+
+
+@value
+struct Attributes:
+    """
     Attributes
     ----------
     u : float
@@ -43,12 +69,12 @@ struct BaseValues:
         Base inductance (H).
     tau : float
         Base torque (Nm).
-
     """
-
-    var U_nom: Float32
-    var I_nom: Float32
-    var f_nom: Float32
-    var P_nom: Float32
-    var tau_nom: Float32
-    var n_p: Int
+    var u: Float32
+    var i: Float32
+    var w: Float32
+    var psi: Float32
+    var p: Float32
+    var Z: Float32
+    var L: Float32
+    var tau: Float32
