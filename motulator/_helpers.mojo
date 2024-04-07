@@ -4,7 +4,7 @@ alias PI = 3.141592653589793
 
 
 @value
-struct BaseValues:
+struct NominalValues:
     """
     Base values.
 
@@ -35,7 +35,7 @@ struct BaseValues:
     var tau_nom: Float32
     var n_p: Int
 
-    fn calculateAttributeValues(self) -> Attributes:
+    fn calculateBaseValuesFromNominalValues(self) -> BaseValues:
         var u = sqrt(2 / 3) * self.U_nom
         var i = sqrt(2) * self.I_nom
         var w = 2 * PI * self.f_nom
@@ -45,11 +45,11 @@ struct BaseValues:
         var L = Z / w
         var tau = self.n_p * p / w
 
-        return Attributes(u, i, w, psi, p, Z, L, tau)
+        return BaseValues(u, i, w, psi, p, Z, L, tau)
 
 
 @value
-struct Attributes:
+struct BaseValues:
     """
     Attributes
     ----------
@@ -70,6 +70,7 @@ struct Attributes:
     tau : float
         Base torque (Nm).
     """
+
     var u: Float32
     var i: Float32
     var w: Float32
