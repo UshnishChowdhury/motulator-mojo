@@ -93,7 +93,7 @@ struct InductionMachine:
         self,
         psi_ss: ComplexSIMD[DType.float16, 1],
         psi_rs: ComplexSIMD[DType.float16, 1],
-    ):
+    ) -> MagneticModel:
         """
         Magnetic model.
 
@@ -114,10 +114,15 @@ struct InductionMachine:
             Electromagnetic torque (Nm).
 
         """
-        i_ss, i_rs = self.currents(psi_ss, psi_rs)
-        tau_M = 1.5 * self.n_p * np.imag(i_ss * np.conj(psi_ss))
+        var complexCurrents = self.currents(psi_ss, psi_rs)
 
-        return i_ss, i_rs, tau_M
+        # Calling Python Module - Numpy
+        var np = Python.import_module("numpy")
+        var tau_M = PythonObject.to_float64(
+            1.5 * self.n_p * complexCurrents.i_ss.im * np.conj(psi_ss.im)
+        )
+
+        return MagneticModel(complexCurrents.i_ss, complexCurrents.i_rs, tau_M)
 
     def f(self, psi_ss, psi_rs, u_ss, w_M):
         """
@@ -168,7 +173,7 @@ struct InductionMachine:
 
         """
         # Stator current space vector in stator coordinates
-        i_ss, _ = self.currents(self.psi_ss0, self.psi_rs0)
+        var i_ss = self.currents(self.psi_ss0, self.psi_rs0)
         # Phase currents
         i_s_abc = complex2abc(i_ss)  # + noise + offset ...
         return i_s_abc
@@ -211,3 +216,10 @@ struct InductionMachineInvGamma[InductionMachine]:
 struct ComplexCurrents:
     var i_rs: ComplexSIMD[DType.float16, 1]
     var i_ss: ComplexSIMD[DType.float16, 1]
+
+
+@value
+struct MagneticModel:
+    var i_ss: ComplexSIMD[DType.float16, 1]
+    var i_rs: ComplexSIMD[DType.float16, 1]
+    var tau: Float64
