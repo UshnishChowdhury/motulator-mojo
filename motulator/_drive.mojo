@@ -127,7 +127,7 @@ struct InductionMachine:
         psi_rs: ComplexSIMD[DType.float16, 1],
         u_ss: ComplexSIMD[DType.float16, 1],
         w_M: Float16,
-    ):
+    ) -> StateDerivativeModel:
         """
         Compute the state derivatives.
 
@@ -161,10 +161,9 @@ struct InductionMachine:
         """
         # var i_ss, i_rs, tau_M = self.magnetic(psi_ss, psi_rs)
         var magnetic_model = self.magnetic(psi_ss, psi_rs)
-        var dpsi_ss: ComplexSIMD[DType.float16, 1]
-        dpsi_ss = dpsi_ss.__init__(
-            self.calculate_dpsi(magnetic_model.i_ss.re, u_ss.re),
-            self.calculate_dpsi(magnetic_model.i_ss.im, u_ss.im),
+
+        var dpsi_ss = u_ss.__add__(
+            -self.convert_to_complex_form(self.R_s).__mul__(magnetic_model.i_ss)
         )
 
         var dpsi_rs = (
@@ -177,8 +176,10 @@ struct InductionMachine:
             )
         )
 
-        return [dpsi_ss, dpsi_rs], magnetic_model.i_ss, magnetic_model.tau
-    
+        return StateDerivativeModel(
+            dpsi_ss, dpsi_rs, magnetic_model.i_ss, magnetic_model.tau_M
+        )
+
     def meas_currents(self):
         """
         Measure the phase currents at the end of the sampling period.
@@ -195,9 +196,7 @@ struct InductionMachine:
         i_s_abc = complex2abc(i_ss)  # + noise + offset ...
         return i_s_abc
 
-    fn calculate_dpsi(inout self, i_ss: Float16, u_ss: Float16) -> Float16:
-        return u_ss - self.R_s * i_ss
-
+    
     fn convert_to_complex_form(
         inout self, number: Float16
     ) -> ComplexSIMD[DType.float16, 1]:
@@ -205,6 +204,7 @@ struct InductionMachine:
         converted_complex_number = converted_complex_number.__init__(number, 0)
         return converted_complex_number
 
+    
     fn j(inout self) -> ComplexSIMD[DType.float16, 1]:
         var imag_j: ComplexSIMD[DType.float16, 1]
         imag_j = imag_j.__init__(0, 1)
@@ -254,4 +254,12 @@ struct ComplexCurrents:
 struct MagneticModel:
     var i_ss: ComplexSIMD[DType.float16, 1]
     var i_rs: ComplexSIMD[DType.float16, 1]
-    var tau: Float16
+    var tau_M: Float16
+
+
+@value
+struct StateDerivativeModel:
+    var dpsi_ss: ComplexSIMD[DType.float16, 1]
+    var dpsi_rs: ComplexSIMD[DType.float16, 1]
+    var i_ss: ComplexSIMD[DType.float16, 1]
+    var tau_M: Float16
