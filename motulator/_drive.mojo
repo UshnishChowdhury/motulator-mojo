@@ -1,4 +1,3 @@
-from python import Python
 from complex import ComplexSIMD
 
 
@@ -114,15 +113,13 @@ struct InductionMachine:
             Electromagnetic torque (Nm).
 
         """
-        var complexCurrents = self.currents(psi_ss, psi_rs)
+        var complex_currents: ComplexCurrents = self.currents(psi_ss, psi_rs)
+        var current_psi_ss = psi_ss
+        # Changing imaginary axis sign for complex conjugate
+        current_psi_ss.im = -1 * psi_ss.im
+        var tau_M = 1.5 * self.n_p * (complex_currents.i_ss.__mul__(current_psi_ss)).im
 
-        # Calling Python Module - Numpy
-        var np = Python.import_module("numpy")
-        var tau_M = PythonObject.to_float64(
-            1.5 * self.n_p * complexCurrents.i_ss.im * np.conj(psi_ss.im)
-        )
-
-        return MagneticModel(complexCurrents.i_ss, complexCurrents.i_rs, tau_M)
+        return MagneticModel(complex_currents.i_ss, complex_currents.i_rs, tau_M)
 
     def f(self, psi_ss, psi_rs, u_ss, w_M):
         """
@@ -222,4 +219,4 @@ struct ComplexCurrents:
 struct MagneticModel:
     var i_ss: ComplexSIMD[DType.float16, 1]
     var i_rs: ComplexSIMD[DType.float16, 1]
-    var tau: Float64
+    var tau: Float16
