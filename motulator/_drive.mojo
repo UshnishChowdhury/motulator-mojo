@@ -88,7 +88,7 @@ struct InductionMachine:
 
         return ComplexCurrents(i_ss, i_rs)
 
-    def magnetic(
+    fn magnetic(inout 
         self,
         psi_ss: ComplexSIMD[DType.float16, 1],
         psi_rs: ComplexSIMD[DType.float16, 1],
