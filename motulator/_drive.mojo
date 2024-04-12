@@ -88,8 +88,8 @@ struct InductionMachine:
 
         return ComplexCurrents(i_ss, i_rs)
 
-    fn magnetic(inout 
-        self,
+    fn magnetic(
+        inout self,
         psi_ss: ComplexSIMD[DType.float16, 1],
         psi_rs: ComplexSIMD[DType.float16, 1],
     ) -> MagneticModel:
@@ -121,7 +121,13 @@ struct InductionMachine:
 
         return MagneticModel(complex_currents.i_ss, complex_currents.i_rs, tau_M)
 
-    def f(self, psi_ss, psi_rs, u_ss, w_M):
+    fn f(
+        inout self,
+        psi_ss: ComplexSIMD[DType.float16, 1],
+        psi_rs: ComplexSIMD[DType.float16, 1],
+        u_ss: ComplexSIMD[DType.float16, 1],
+        w_M: Float16,
+    ):
         """
         Compute the state derivatives.
 
@@ -153,12 +159,26 @@ struct InductionMachine:
         computation in simulation.
 
         """
-        i_ss, i_rs, tau_M = self.magnetic(psi_ss, psi_rs)
-        dpsi_ss = u_ss - self.R_s * i_ss
-        dpsi_rs = -self.R_r * i_rs + 1j * self.n_p * w_M * psi_rs
+        # var i_ss, i_rs, tau_M = self.magnetic(psi_ss, psi_rs)
+        var magnetic_model = self.magnetic(psi_ss, psi_rs)
+        var dpsi_ss: ComplexSIMD[DType.float16, 1]
+        dpsi_ss = dpsi_ss.__init__(
+            self.calculate_dpsi(magnetic_model.i_ss.re, u_ss.re),
+            self.calculate_dpsi(magnetic_model.i_ss.im, u_ss.im),
+        )
 
-        return [dpsi_ss, dpsi_rs], i_ss, tau_M
+        var dpsi_rs = (
+            -self.convert_to_complex_form(self.R_r).__mul__(magnetic_model.i_rs)
+        ).__add__(
+            self.j().__mul__(
+                self.convert_to_complex_form(self.n_p)
+                .__mul__(self.convert_to_complex_form(w_M))
+                .__mul__(psi_rs)
+            )
+        )
 
+        return [dpsi_ss, dpsi_rs], magnetic_model.i_ss, magnetic_model.tau
+    
     def meas_currents(self):
         """
         Measure the phase currents at the end of the sampling period.
@@ -174,6 +194,21 @@ struct InductionMachine:
         # Phase currents
         i_s_abc = complex2abc(i_ss)  # + noise + offset ...
         return i_s_abc
+
+    fn calculate_dpsi(inout self, i_ss: Float16, u_ss: Float16) -> Float16:
+        return u_ss - self.R_s * i_ss
+
+    fn convert_to_complex_form(
+        inout self, number: Float16
+    ) -> ComplexSIMD[DType.float16, 1]:
+        var converted_complex_number: ComplexSIMD[DType.float16, 1]
+        converted_complex_number = converted_complex_number.__init__(number, 0)
+        return converted_complex_number
+
+    fn j(inout self) -> ComplexSIMD[DType.float16, 1]:
+        var imag_j: ComplexSIMD[DType.float16, 1]
+        imag_j = imag_j.__init__(0, 1)
+        return imag_j
 
 
 struct InductionMachineInvGamma[InductionMachine]:
