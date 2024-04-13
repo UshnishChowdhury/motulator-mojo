@@ -1,5 +1,6 @@
 from _helpers import BaseValues, NominalValues
 from _drive import InductionMachineInvGamma
+from _mechanics import Mechanics
 
 fn main():
     # %%
@@ -13,5 +14,6 @@ fn main():
     var machine = InductionMachineInvGamma(R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224, n_p=2)
 
     # Mechanics model
+    var mechanics = Mechanics(J=.015)
     
-    print(baseValues.u)
+    print(mechanics.tau_L_t)

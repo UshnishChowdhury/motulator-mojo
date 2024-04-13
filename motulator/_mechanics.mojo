@@ -1,4 +1,6 @@
 # %%
+
+
 struct Mechanics:
     """
     Mechanics subsystem.
@@ -14,11 +16,12 @@ struct Mechanics:
         ``tau_L_w = b*w_M``, where `b` is the viscous friction coefficient. The
         default is zero, ``lambda w_M: 0*w_M``.
     tau_L_t : callable
-        Load torque (Nm) as a function of time, `tau_L_t(t)`. The default is 
+        Load torque (Nm) as a function of time, `tau_L_t(t)`. The default is
         zero, ``lambda t: 0*t``.
 
     """
-    var J : Float16
+
+    var J: Float16
     var tau_L_t: Float16
     var tau_L_w: Float16
     var w_M0: Float16
@@ -27,12 +30,14 @@ struct Mechanics:
     fn __init__(inout self, J: Float16):
         self.J = J
         # Initial values
-        self.tau_L_t = self.calculate_tau_L_t(0, 0) 
-        self.tau_L_w = self.calculate_tau_L_w(0, 0)
-        self.w_M0 = 0 
+        self.tau_L_t = 0
+        self.tau_L_w = 0
+        self.w_M0 = 0
         self.theta_M0 = 0
 
-    def f(self, t, w_M, tau_M):
+    fn f(
+        inout self, t: Float16, w_M: Float16, tau_M: Float16
+    ) -> ListLiteral[Float16, Float16]:
         """
         Compute the state derivatives.
 
@@ -52,13 +57,15 @@ struct Mechanics:
 
         """
         # Total load torque
-        tau_L = self.tau_L_w(w_M) + self.tau_L_t(t)
+        var tau_L: Float16 = self.calculate_load_torque_as_fn_of_speed(
+            0, w_M
+        ) + self.calculate_load_torque_as_fn_of_time(0, t)
         # Time derivatives
-        dw_M = (tau_M - tau_L)/self.J
-        dtheta_M = w_M
+        var dw_M: Float16 = (tau_M - tau_L) / self.J
+        var dtheta_M: Float16 = w_M
         return [dw_M, dtheta_M]
 
-    def meas_speed(self):
+    fn meas_speed(inout self) -> Float16:
         """
         Measure the rotor speed.
 
@@ -74,7 +81,7 @@ struct Mechanics:
         # by means of the rotor angle, to be done later.
         return self.w_M0
 
-    def meas_position(self):
+    fn meas_position(self) -> Float16:
         """
         Measure the rotor angle.
 
@@ -88,8 +95,12 @@ struct Mechanics:
         """
         return self.theta_M0
 
-    fn calculate_tau_L_w(inout self, b : Float16, w_M: Float16) -> Float16:
-        return b*w_M
+    fn calculate_load_torque_as_fn_of_speed(
+        inout self, w_M: Float16, b: Float16
+    ) -> Float16:
+        return w_M * b
 
-    fn calculate_tau_L_t(inout self, a : Float16, t: Float16) -> Float16:
-        return a*t    
+    fn calculate_load_torque_as_fn_of_time(
+        inout self, t: Float16, b: Float16
+    ) -> Float16:
+        return t * b
