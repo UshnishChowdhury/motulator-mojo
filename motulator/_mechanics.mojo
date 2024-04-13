@@ -1,3 +1,4 @@
+# %%
 struct Mechanics:
     """
     Mechanics subsystem.
@@ -17,12 +18,19 @@ struct Mechanics:
         zero, ``lambda t: 0*t``.
 
     """
+    var J : Float16
+    var tau_L_t: Float16
+    var tau_L_w: Float16
+    var w_M0: Float16
+    var theta_M0: Float16
 
-    def __init__(self, J, tau_L_w=lambda w_M: 0*w_M, tau_L_t=lambda t: 0*t):
+    fn __init__(inout self, J: Float16):
         self.J = J
-        self.tau_L_t, self.tau_L_w = tau_L_t, tau_L_w
         # Initial values
-        self.w_M0, self.theta_M0 = 0, 0
+        self.tau_L_t = self.calculate_tau_L_t(0, 0) 
+        self.tau_L_w = self.calculate_tau_L_w(0, 0)
+        self.w_M0 = 0 
+        self.theta_M0 = 0
 
     def f(self, t, w_M, tau_M):
         """
@@ -79,3 +87,9 @@ struct Mechanics:
 
         """
         return self.theta_M0
+
+    fn calculate_tau_L_w(inout self, b : Float16, w_M: Float16) -> Float16:
+        return b*w_M
+
+    fn calculate_tau_L_t(inout self, a : Float16, t: Float16) -> Float16:
+        return a*t    
