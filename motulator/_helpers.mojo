@@ -1,6 +1,47 @@
 from math import sqrt
+from tensor import Tensor
+from complex import ComplexSIMD
 
 alias PI = 3.141592653589793
+
+
+fn abc2complex(u: Tensor[DType.float16]) -> ComplexSIMD[DType.float16, 1]:
+    """
+    Transform three-phase quantities to a complex space vector.
+
+    Parameters
+    ----------
+    u : array_like, shape (3,)
+        Phase quantities.
+
+    Returns
+    -------
+    complex
+        Complex space vector (peak-value scaling).
+
+    Examples
+    --------
+    >>> from motulator import abc2complex
+    >>> y = abc2complex([1, 2, 3])
+    >>> y
+    (-1-0.5773502691896258j)
+
+    """
+    return convert_to_complex_form((2 / 3) * u[0] - (u[1] + u[2]) / 3).__add__(
+        j().__mul__(convert_to_complex_form((u[1] - u[2]) / sqrt(3)))
+    )
+
+
+fn convert_to_complex_form(number: Float16) -> ComplexSIMD[DType.float16, 1]:
+    var converted_complex_number: ComplexSIMD[DType.float16, 1]
+    converted_complex_number = converted_complex_number.__init__(number, 0)
+    return converted_complex_number
+
+
+fn j() -> ComplexSIMD[DType.float16, 1]:
+    var imag_j: ComplexSIMD[DType.float16, 1]
+    imag_j = imag_j.__init__(0, 1)
+    return imag_j
 
 
 @value
