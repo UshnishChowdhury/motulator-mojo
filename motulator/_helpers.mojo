@@ -6,7 +6,7 @@ from python import Python
 alias PI = 3.141592653589793
 
 
-fn abc2complex(u: Tensor[DType.float16]) -> ComplexSIMD[DType.float16, 1]:
+fn abc_to_complex(u: Tensor[DType.float16]) -> ComplexSIMD[DType.float16, 1]:
     """
     Transform three-phase quantities to a complex space vector.
 
@@ -34,7 +34,7 @@ fn abc2complex(u: Tensor[DType.float16]) -> ComplexSIMD[DType.float16, 1]:
 
 
 # %%
-fn complex2abc(u: ComplexSIMD[DType.float16, 1]) raises -> PythonObject:
+fn complex_to_abc(u: ComplexSIMD[DType.float16, 1]) raises -> PythonObject:
     """
     Transform a complex space vector to three-phase quantities.
 

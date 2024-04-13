@@ -1,5 +1,6 @@
 from complex import ComplexSIMD
-from _helpers import complex2abc
+from _helpers import complex_to_abc, j, convert_to_complex_form
+
 
 struct InductionMachine:
     """
@@ -163,15 +164,15 @@ struct InductionMachine:
         var magnetic_model = self.magnetic(psi_ss, psi_rs)
 
         var dpsi_ss = u_ss.__add__(
-            -self.convert_to_complex_form(self.R_s).__mul__(magnetic_model.i_ss)
+            -convert_to_complex_form(self.R_s).__mul__(magnetic_model.i_ss)
         )
 
         var dpsi_rs = (
-            -self.convert_to_complex_form(self.R_r).__mul__(magnetic_model.i_rs)
+            -convert_to_complex_form(self.R_r).__mul__(magnetic_model.i_rs)
         ).__add__(
-            self.j().__mul__(
-                self.convert_to_complex_form(self.n_p)
-                .__mul__(self.convert_to_complex_form(w_M))
+            j().__mul__(
+                convert_to_complex_form(self.n_p)
+                .__mul__(convert_to_complex_form(w_M))
                 .__mul__(psi_rs)
             )
         )
@@ -180,7 +181,7 @@ struct InductionMachine:
             dpsi_ss, dpsi_rs, magnetic_model.i_ss, magnetic_model.tau_M
         )
 
-    def meas_currents(self):
+    fn meas_currents(inout self) raises -> PythonObject:
         """
         Measure the phase currents at the end of the sampling period.
 
@@ -190,25 +191,11 @@ struct InductionMachine:
             Phase currents (A).
 
         """
-        # Stator current space vector in stator coordinates
-        var i_ss = self.currents(self.psi_ss0, self.psi_rs0)
+        # Current space vector in stator coordinates
+        var i_ss = self.currents(self.psi_ss0, self.psi_rs0).i_ss
         # Phase currents
-        i_s_abc = complex2abc(i_ss)  # + noise + offset ...
+        var i_s_abc: PythonObject = complex_to_abc(i_ss)  # + noise + offset ...
         return i_s_abc
-
-    
-    fn convert_to_complex_form(
-        inout self, number: Float16
-    ) -> ComplexSIMD[DType.float16, 1]:
-        var converted_complex_number: ComplexSIMD[DType.float16, 1]
-        converted_complex_number = converted_complex_number.__init__(number, 0)
-        return converted_complex_number
-
-    
-    fn j(inout self) -> ComplexSIMD[DType.float16, 1]:
-        var imag_j: ComplexSIMD[DType.float16, 1]
-        imag_j = imag_j.__init__(0, 1)
-        return imag_j
 
 
 struct InductionMachineInvGamma[InductionMachine]:
