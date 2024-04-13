@@ -98,9 +98,30 @@ struct Mechanics:
     fn calculate_load_torque_as_fn_of_speed(
         inout self, w_M: Float16, b: Float16
     ) -> Float16:
+        """
+        Load torque (Nm) as a function of speed, `tau_L_w(w_M)`. For example,
+        ``tau_L_w = b*w_M``, where `b` is the viscous friction coefficient. The
+        default is zero, ``lambda w_M: 0*w_M``.
+
+        Parameters
+        ----------
+        w_M : float
+            Rotor angular speed (mechanical rad/s).
+        b: float
+            viscous friction coefficient
+        """
         return w_M * b
 
     fn calculate_load_torque_as_fn_of_time(
         inout self, t: Float16, b: Float16
     ) -> Float16:
+        """
+        Load torque (Nm) as a function of time, `tau_L_t(t)`. The default is
+        zero, ``lambda t: 0*t``.
+
+        Parameters
+        ----------
+        t : float
+            Rotor angular speed (mechanical rad/s).
+        """
         return t * b
