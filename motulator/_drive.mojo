@@ -52,8 +52,8 @@ struct InductionMachine:
         self.R_s, self.R_r = R_s, R_r
         self.L_ell, self.L_s = L_ell, L_s
         # Initial values
-        self.psi_ss0.im = 0
-        self.psi_rs0.im = 0
+        self.psi_ss0 = self.psi_ss0.__init__(0, 0)
+        self.psi_rs0 = self.psi_rs0.__init__(0, 0)
 
     fn currents(
         inout self,
@@ -81,12 +81,13 @@ struct InductionMachine:
         var i_rs: ComplexSIMD[DType.float16, 1]
         var i_ss: ComplexSIMD[DType.float16, 1]
 
-        i_rs.re = (psi_rs.re - psi_ss.re) / (self.L_ell)
-        i_rs.im = (psi_rs.im - psi_ss.im) / (self.L_ell)
-
-        i_ss.re = psi_ss.re / self.L_s - i_rs.re
-        i_ss.im = psi_ss.im / self.L_s - i_rs.im
-
+        i_rs = i_rs.__init__(
+            (psi_rs.re - psi_ss.re) / (self.L_ell),
+            (psi_rs.im - psi_ss.im) / (self.L_ell),
+        )
+        i_ss = i_ss.__init__(
+            psi_ss.re / self.L_s - i_rs.re, psi_ss.im / self.L_s - i_rs.im
+        )
         return ComplexCurrents(i_ss, i_rs)
 
     fn magnetic(
@@ -198,7 +199,7 @@ struct InductionMachine:
         return i_s_abc
 
 
-struct InductionMachineInvGamma[InductionMachine]:
+struct InductionMachineInvGamma:
     """
     Inverse-Γ model of an induction machine.
 
@@ -221,14 +222,37 @@ struct InductionMachineInvGamma[InductionMachine]:
 
     """
 
-    def __init__(self, n_p, R_s, R_R, L_sgm, L_M):
-        # pylint: disable=too-many-arguments
+    var induction_machine: InductionMachine
+    var n_p: Int
+    var R_s: Float16
+    var R_R: Float16
+    var L_sgm: Float16
+    var L_M: Float16
+
+    var psi_ss0: ComplexSIMD[DType.float16, 1]
+    var psi_rs0: ComplexSIMD[DType.float16, 1]
+
+    fn __init__(
+        inout self, n_p: Int, R_s: Float16, R_R: Float16, L_sgm: Float16, L_M: Float16
+    ):
         # Convert the inverse-Γ parameters to the Γ parameters
-        gamma = L_M / (L_M + L_sgm)  # Magnetic coupling factor
-        super().__init__(n_p, R_s, R_R / gamma**2, L_sgm / gamma, L_M + L_sgm)
+        self.n_p = n_p
+        self.R_s = R_s
+        self.R_R = R_R
+        self.L_sgm = L_sgm
+        self.L_M = L_M
+
+        var gamma = self.L_M / (self.L_M + self.L_sgm)  # Magnetic coupling factor
+        self.induction_machine.__init__(
+            self.n_p,
+            self.R_s,
+            self.R_R / gamma**2,
+            self.L_sgm / gamma,
+            self.L_M + self.L_sgm,
+        )
         # Initial values
-        self.psi_ss0 = 0j
-        self.psi_rs0 = 0j  # self.psi_rs0 = self.psi_Rs0/gamma
+        self.psi_ss0 = self.psi_ss0.__init__(0, 0)
+        self.psi_rs0 = self.psi_rs0.__init__(0, 0)  # self.psi_rs0 = self.psi_Rs0/gamma
 
 
 @value
