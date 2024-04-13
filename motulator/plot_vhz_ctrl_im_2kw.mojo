@@ -1,6 +1,7 @@
 from _helpers import BaseValues, NominalValues
 from _drive import InductionMachineInvGamma
 from _mechanics import Mechanics
+from _converter import Inverter
 
 fn main():
     # %%
@@ -15,5 +16,7 @@ fn main():
 
     # Mechanics model
     var mechanics = Mechanics(J=.015)
+    # Inverter model
+    var converter = Inverter(u_dc=540)
     
     print(mechanics.tau_L_t)

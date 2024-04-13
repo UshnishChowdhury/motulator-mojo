@@ -75,6 +75,15 @@ fn j() -> ComplexSIMD[DType.float16, 1]:
     return imag_j
 
 
+fn get_complex_conjugate(
+    complex_number: ComplexSIMD[DType.float16, 1]
+) -> ComplexSIMD[DType.float16, 1]:
+    var conjugate_complex_number = complex_number.__init__(
+        complex_number.re, -1 * complex_number.im
+    )
+    return conjugate_complex_number
+
+
 @value
 struct NominalValues:
     """
