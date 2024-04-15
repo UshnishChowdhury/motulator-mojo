@@ -1,10 +1,17 @@
 from complex import ComplexSIMD
 from python import Python
 
+
 def main():
-    var i_rs: ComplexSIMD[DType.float16, 1]
-    i_rs.re = 1
-    i_rs.im = 2
-    print(i_rs.im)
-    var np = Python.import_module("numpy")
-    print(np.conj(i_rs.im))
+    var a  = 0
+    var b  = 2
+
+    var number1: ComplexSIMD[DType.float16, 1]
+    number1 = number1.__init__(a, b)
+    var number2: ComplexSIMD[DType.float16, 1]
+    number2 = number2.__init__(a, b)
+
+    var number3 = number1.__mul__(number2)
+
+    print(number3.im)
+    
